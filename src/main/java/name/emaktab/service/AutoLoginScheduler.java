@@ -35,7 +35,7 @@ public class AutoLoginScheduler {
      * Har kuni soat 08:00 (Asia/Samarkand) da ishlaydi.
      * Zone: sizning system timezone bo'yicha "Asia/Samarkand" ishlatildi.
      */
-    @Scheduled(cron = "0 35 18 * * *", zone = "Asia/Samarkand")
+    @Scheduled(cron = "0 50 18 * * *", zone = "Asia/Samarkand")
     @Transactional
     public void runAutoLoginForAllUsers() {
         List<User> users = userRepository.findAll();
