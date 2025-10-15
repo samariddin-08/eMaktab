@@ -90,7 +90,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
         }
     }
 
-    private void sendMessage(String chatId, String text) {
+    public void sendMessage(String chatId, String text) {
         try {
             execute(SendMessage.builder()
                     .chatId(chatId)
