@@ -65,7 +65,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
             // Loginni tekshirish
             LoginService.LoginResult result = loginService.loginAndGetCookies(login, password);
             if (!result.success) {
-                sendMessage(chatId, "❌ Login amalga oshmadi.\n" + result.message);
+                sendMessage(chatId, "❌ Login amalga oshmadi.\nUsername yoki parolni tekshiring! " );
                 return;
             }
 
