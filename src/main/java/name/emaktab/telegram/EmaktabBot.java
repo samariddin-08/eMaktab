@@ -21,7 +21,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
 
     private static final Logger logger = LoggerFactory.getLogger(EmaktabBot.class);
 
-    private final LoginService loginService;
+    private final LoginService loginService; // Nom o'zgartirildi: emaktabBot -> loginService
     private final UserRepository userRepository;
 
     @Value("${telegram.bot.username}")
@@ -74,7 +74,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
             for (User existingUser : usersByTelegramId) {
                 if (existingUser.getUsername().equals(login)) {
                     sendMessage(chatId, "🚫 Ushbu foydalanuvchi allaqachon ro‘yxatdan o‘tgan!");
-                    return; // Qayta login qilishni taqiqlash
+                    return; // Qayta ro'yxatdan o'tishni taqiqlash
                 }
             }
 
