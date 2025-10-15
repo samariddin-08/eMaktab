@@ -1,7 +1,6 @@
 package name.emaktab.telegram;
 
 import lombok.RequiredArgsConstructor;
-import lombok.SneakyThrows;
 import name.emaktab.entity.User;
 import name.emaktab.payload.LoginResult;
 import name.emaktab.repository.UserRepository;
@@ -11,6 +10,8 @@ import org.springframework.stereotype.Component;
 import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Optional;
 
@@ -18,7 +19,9 @@ import java.util.Optional;
 @RequiredArgsConstructor
 public class EmaktabBot extends TelegramLongPollingBot {
 
-    private final LoginService emaktabBot; // bizning login servisini inject qilamiz
+    private static final Logger logger = LoggerFactory.getLogger(EmaktabBot.class);
+
+    private final LoginService loginService; // Nom o'zgartirildi (emaktabBot -> loginService)
     private final UserRepository userRepository;
 
     @Value("${telegram.bot.username}")
@@ -37,7 +40,6 @@ public class EmaktabBot extends TelegramLongPollingBot {
         return botToken;
     }
 
-    @SneakyThrows
     @Override
     public void onUpdateReceived(Update update) {
         if (update.hasMessage() && update.getMessage().hasText()) {
@@ -49,8 +51,8 @@ public class EmaktabBot extends TelegramLongPollingBot {
                 return;
             }
 
-            String[] parts = text.split(" ");
-            if (parts.length != 2) {
+            String[] parts = text.split("\\s+", 2); // Bir yoki bir nechta bo'shliqqa ko'ra bo'lish
+            if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
                 sendMessage(chatId, "⚠️ Iltimos, login va parolni to‘g‘ri yozing: `login parol`");
                 return;
             }
@@ -58,37 +60,53 @@ public class EmaktabBot extends TelegramLongPollingBot {
             String login = parts[0];
             String password = parts[1];
 
-            System.out.println(login + " " + password);
-            // 🔐 Loginni tekshiramiz
+            logger.info("Login attempt: {} for chatId: {}", login, chatId);
 
-            LoginService.LoginResult result = emaktabBot.loginAndGetCookies(login, password);
-            if (result.success) {
-                Optional<User> byTelegramId = userRepository.findByTelegramId(chatId);
-                if (byTelegramId.isPresent()) {
-                    User user = byTelegramId.get();
-                    user.setUsername(login);
-                    user.setPassword(password);
-                    userRepository.save(user);
-                }else {
-                    User user = new User();
-                    user.setUsername(login);
-                    user.setPassword(password);
-                    user.setTelegramId(chatId);
-                    userRepository.save(user);
-                }
-
-                sendMessage(chatId, "✅ Muvaffaqiyatli tizimga kirdingiz!\n" + result.message);
-            } else {
+            // Loginni tekshirish
+            LoginService.LoginResult result = loginService.loginAndGetCookies(login, password);
+            if (!result.success) {
                 sendMessage(chatId, "❌ Login amalga oshmadi.\n" + result.message);
+                return;
             }
+
+            // Telegram ID bo'yicha foydalanuvchi qidirish
+            Optional<User> byTelegramId = userRepository.findByTelegramId(chatId);
+            if (byTelegramId.isPresent()) {
+                User existingUser = byTelegramId.get();
+                if (existingUser.getUsername().equals(login)) {
+                    sendMessage(chatId, "🚫 Ushbu foydalanuvchi allaqachon ro‘yxatdan o‘tgan!");
+                    return; // Qayta login qilishni taqiqlash
+                }
+            }
+
+            // Yangi foydalanuvchi qo'shish
+            User user = new User();
+            user.setUsername(login);
+            user.setPassword(password); // Parol shifrlanmagan holda saqlanadi
+            user.setTelegramId(chatId);
+            userRepository.save(user);
+
+            sendMessage(chatId, "✅ Muvaffaqiyatli tizimga kirdingiz!\n" + result.message);
         }
     }
 
-    public void sendMessage(String chatId, String text) {
+    private void sendMessage(String chatId, String text) {
         try {
-            execute(SendMessage.builder().chatId(chatId).text(text).build());
+            execute(SendMessage.builder()
+                    .chatId(chatId)
+                    .text(text)
+                    .parseMode("Markdown")
+                    .build());
         } catch (Exception e) {
-            e.printStackTrace();
+            logger.error("Failed to send message to chatId: {}, error: {}", chatId, e.getMessage());
+            try {
+                execute(SendMessage.builder()
+                        .chatId(chatId)
+                        .text("⚠️ Xatolik yuz berdi, iltimos keyinroq urinib ko'ring.")
+                        .build());
+            } catch (Exception ex) {
+                logger.error("Failed to send error message: {}", ex.getMessage());
+            }
         }
     }
 }
