@@ -13,7 +13,7 @@ import org.telegram.telegrambots.meta.api.objects.Update;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.Optional;
+import java.util.List;
 
 @Component
 @RequiredArgsConstructor
@@ -21,7 +21,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
 
     private static final Logger logger = LoggerFactory.getLogger(EmaktabBot.class);
 
-    private final LoginService loginService; // Nom o'zgartirildi (emaktabBot -> loginService)
+    private final LoginService loginService;
     private final UserRepository userRepository;
 
     @Value("${telegram.bot.username}")
@@ -69,13 +69,12 @@ public class EmaktabBot extends TelegramLongPollingBot {
                 return;
             }
 
-            // Telegram ID bo'yicha foydalanuvchi qidirish
-            Optional<User> byTelegramId = userRepository.findByTelegramId(chatId);
-            if (byTelegramId.isPresent()) {
-                User existingUser = byTelegramId.get();
+            // Telegram ID bo'yicha barcha foydalanuvchilarni qidirish
+            List<User> usersByTelegramId = userRepository.findAllByTelegramId(chatId);
+            for (User existingUser : usersByTelegramId) {
                 if (existingUser.getUsername().equals(login)) {
                     sendMessage(chatId, "🚫 Ushbu foydalanuvchi allaqachon ro‘yxatdan o‘tgan!");
-                   // Qayta login qilishni taqiqlash
+                    return; // Qayta login qilishni taqiqlash
                 }
             }
 
@@ -90,7 +89,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
         }
     }
 
-    public void sendMessage(String chatId, String text) {
+    private void sendMessage(String chatId, String text) {
         try {
             execute(SendMessage.builder()
                     .chatId(chatId)
