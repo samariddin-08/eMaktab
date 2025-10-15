@@ -75,7 +75,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
                 User existingUser = byTelegramId.get();
                 if (existingUser.getUsername().equals(login)) {
                     sendMessage(chatId, "🚫 Ushbu foydalanuvchi allaqachon ro‘yxatdan o‘tgan!");
-                    return; // Qayta login qilishni taqiqlash
+                   // Qayta login qilishni taqiqlash
                 }
             }
 
