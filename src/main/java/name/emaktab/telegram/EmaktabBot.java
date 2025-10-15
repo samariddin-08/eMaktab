@@ -12,6 +12,8 @@ import org.telegram.telegrambots.bots.TelegramLongPollingBot;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
 import org.telegram.telegrambots.meta.api.objects.Update;
 
+import java.util.Optional;
+
 @Component
 @RequiredArgsConstructor
 public class EmaktabBot extends TelegramLongPollingBot {
@@ -61,11 +63,20 @@ public class EmaktabBot extends TelegramLongPollingBot {
 
             LoginService.LoginResult result = emaktabBot.loginAndGetCookies(login, password);
             if (result.success) {
-                User user = new User();
-                user.setUsername(login);
-                user.setPassword(password);
-                user.setTelegramId(chatId);
-                userRepository.save(user);
+                Optional<User> byTelegramId = userRepository.findByTelegramId(chatId);
+                if (byTelegramId.isPresent()) {
+                    User user = byTelegramId.get();
+                    user.setUsername(login);
+                    user.setPassword(password);
+                    userRepository.save(user);
+                }else {
+                    User user = new User();
+                    user.setUsername(login);
+                    user.setPassword(password);
+                    user.setTelegramId(chatId);
+                    userRepository.save(user);
+                }
+
                 sendMessage(chatId, "✅ Muvaffaqiyatli tizimga kirdingiz!\n" + result.message);
             } else {
                 sendMessage(chatId, "❌ Login amalga oshmadi.\n" + result.message);
