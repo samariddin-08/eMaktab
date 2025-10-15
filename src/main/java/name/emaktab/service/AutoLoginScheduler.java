@@ -5,6 +5,8 @@ import name.emaktab.entity.User;
 import name.emaktab.repository.UserRepository;
 import name.emaktab.service.LoginService.LoginResult;
 import name.emaktab.telegram.EmaktabBot;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
@@ -17,6 +19,8 @@ import java.util.stream.Collectors;
 
 @Component
 public class AutoLoginScheduler {
+
+    private static final Logger logger = LoggerFactory.getLogger(AutoLoginScheduler.class);
 
     private final UserRepository userRepository;
     private final LoginService loginService;
@@ -33,10 +37,13 @@ public class AutoLoginScheduler {
 
     /**
      * Har kuni soat 23:27 da (Asia/Samarkand) ishlaydi.
+     * Cron: 0 (soniya) 27 (daqiqa) 23 (soat) * (kun) * (oy) ? (hafta kuni)
      */
-    @Scheduled(cron = "22 11 00 * * ?", zone = "Asia/Samarkand")
+    @Scheduled(cron = "20 20 00 * * ?", zone = "Asia/Samarkand")
     @Transactional
-    public void runAutoLoginForAllUsers() {
+    public synchronized void runAutoLoginForAllUsers() {
+        logger.info("AutoLoginScheduler ishga tushdi: {}", LocalDateTime.now(ZoneId.of("Asia/Samarkand")));
+
         // telegramId bo'yicha foydalanuvchilarni guruhlash
         Map<String, List<User>> usersByTelegramId = userRepository.findAll()
                 .stream()
@@ -47,7 +54,7 @@ public class AutoLoginScheduler {
             List<User> users = entry.getValue();
 
             try {
-                // Faqat bir marta boshlang'ich xabar
+                // Faqat bir marta boshlang'ich xabar yuborish
                 StringBuilder initialMessage = new StringBuilder("🔁 Avtomatik kirish urinish boshlanmoqda:\n");
                 users.forEach(user -> initialMessage.append("- ").append(user.getUsername()).append("\n"));
                 telegramBot.sendMessage(chatId, initialMessage.toString());
@@ -72,12 +79,15 @@ public class AutoLoginScheduler {
                     userRepository.save(user);
                 }
 
-                // Faqat bitta natija xabari
+                // Faqat bitta natija xabari yuborish
                 if (resultMessage.length() > 0) {
                     telegramBot.sendMessage(chatId, resultMessage.toString());
                 }
 
+                logger.info("AutoLoginScheduler tugadi: {} foydalanuvchi uchun, chatId: {}", users.size(), chatId);
+
             } catch (Exception ex) {
+                logger.error("AutoLoginScheduler xatosi: {}", ex.getMessage());
                 String err = "⚠️ Avtomatik kirishda umumiy xato yuz berdi: " + ex.getMessage();
                 telegramBot.sendMessage(chatId, err);
             }
