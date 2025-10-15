@@ -34,7 +34,7 @@ public class AutoLoginScheduler {
     /**
      * Har kuni soat 23:27 da (Asia/Samarkand) ishlaydi.
      */
-    @Scheduled(cron = "00 07 00 * * ?", zone = "Asia/Samarkand")
+    @Scheduled(cron = "22 11 00 * * ?", zone = "Asia/Samarkand")
     @Transactional
     public void runAutoLoginForAllUsers() {
         // telegramId bo'yicha foydalanuvchilarni guruhlash
