@@ -5,4 +5,4 @@ COPY mvnw pom.xml ./
 RUN ./mvnw dependency:go-offline
 COPY src ./src
 RUN ./mvnw package
-CMD ["java", "-jar", "target/myapp-0.0.1-SNAPSHOT.jar", "--server.port=$PORT"]
+CMD ["java", "-jar", "target/eMaktab-0.0.1-SNAPSHOT.jar", "--server.port=$PORT"]
