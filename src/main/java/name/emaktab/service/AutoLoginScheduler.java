@@ -39,12 +39,12 @@ public class AutoLoginScheduler {
      * Har kuni soat 23:27 da (Asia/Samarkand) ishlaydi.
      * Cron: 0 (soniya) 27 (daqiqa) 23 (soat) * (kun) * (oy) ? (hafta kuni)
      */
-    @Scheduled(cron = "20 35 00 * * ?", zone = "Asia/Samarkand")
+    @Scheduled(cron = "00 00 08 * * ?", zone = "Asia/Samarkand")
     @Transactional
     public synchronized void runAutoLoginForAllUsers() {
         logger.info("AutoLoginScheduler ishga tushdi: {}", LocalDateTime.now(ZoneId.of("Asia/Samarkand")));
 
-        // telegramId bo'yicha foydalanuvchilarni guruhlash
+        // telegramId bo'yicha foydalanuvchilarni g     uruhlash
         Map<String, List<User>> usersByTelegramId = userRepository.findAll()
                 .stream()
                 .collect(Collectors.groupingBy(User::getTelegramId));
