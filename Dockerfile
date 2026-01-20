@@ -1,8 +1,14 @@
-# --- YAKUNIY BOSQICH ---
-# Faqat JRE (Java Runtime Environment) ni o'z ichiga olgan kichikroq tasvirdan boshlaymiz
-FROM openjdk:17.0.10-jre-slim-bullseye
+# --- BUILD BOSQICHI ---
+FROM maven:3.8.1-openjdk-17 AS builder
 WORKDIR /app
-# Yuqoridagi bosqichda yaratilgan JAR faylini nusxalaymiz
+COPY .mvn/ .mvn/
+COPY mvnw pom.xml ./
+COPY src ./src
+RUN ./mvnw clean package -DskipTests
+
+# --- YAKUNIY BOSQICH ---
+# Alternativ JRE tasviri, agar yuqoridagisi ishlamasa, bunisini sinab ko'ring
+FROM eclipse-temurin:17-jre-alpine
+WORKDIR /app
 COPY --from=builder /app/target/eMaktab-0.0.1-SNAPSHOT.jar ./eMaktab.jar
-# Ilovani ishga tushirish buyrug'i
 CMD ["java", "-jar", "eMaktab.jar"]
