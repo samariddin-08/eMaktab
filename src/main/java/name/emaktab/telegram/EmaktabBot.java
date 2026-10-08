@@ -1,6 +1,5 @@
 package name.emaktab.telegram;
 
-import lombok.RequiredArgsConstructor;
 import name.emaktab.entity.User;
 import name.emaktab.payload.LoginResult;
 import name.emaktab.repository.UserRepository;
@@ -16,19 +15,31 @@ import org.slf4j.LoggerFactory;
 import java.util.List;
 
 @Component
-@RequiredArgsConstructor
 public class EmaktabBot extends TelegramLongPollingBot {
 
     private static final Logger logger = LoggerFactory.getLogger(EmaktabBot.class);
 
-    private final LoginService loginService; // Nom o'zgartirildi: emaktabBot -> loginService
+    private final LoginService loginService;
     private final UserRepository userRepository;
+    private final String botUsername;
+    private final String botToken;
 
-    @Value("${telegram.bot.username}")
-    private String botUsername;
+    // Lombok o'rniga qo'lda to'g'ri konstruktor yozdik.
+    // Bu bot tokenini null bo'lib qolishidan va dastur o'chib qolishidan himoya qiladi.
+    public EmaktabBot(
+            LoginService loginService,
+            UserRepository userRepository,
+            @Value("${telegram.bot.username}") String botUsername,
+            @Value("${telegram.bot.token}") String botToken) {
 
-    @Value("${telegram.bot.token}")
-    private String botToken;
+        // Telegram kutubxonasining o'ziga tokenni uzatamiz
+        super(botToken);
+
+        this.loginService = loginService;
+        this.userRepository = userRepository;
+        this.botUsername = botUsername;
+        this.botToken = botToken;
+    }
 
     @Override
     public String getBotUsername() {
@@ -51,7 +62,7 @@ public class EmaktabBot extends TelegramLongPollingBot {
                 return;
             }
 
-            String[] parts = text.split("\\s+", 2); // Bir yoki bir nechta bo'shliqqa ko'ra bo'lish
+            String[] parts = text.split("\\s+", 2);
             if (parts.length != 2 || parts[0].isBlank() || parts[1].isBlank()) {
                 sendMessage(chatId, "⚠️ Iltimos, login va parolni to‘g‘ri yozing: `login parol`");
                 return;
@@ -62,30 +73,31 @@ public class EmaktabBot extends TelegramLongPollingBot {
 
             logger.info("Login attempt: {} for chatId: {}", login, chatId);
 
-            // Loginni tekshirish
+
             LoginService.LoginResult result = loginService.loginAndGetCookies(login, password);
-            if (!result.success) {
+            if (result == null || !result.success) {
                 sendMessage(chatId, "❌ Login amalga oshmadi.\nUsername yoki parolni tekshiring! " );
                 return;
             }
+
 
             // Telegram ID bo'yicha barcha foydalanuvchilarni qidirish
             List<User> usersByTelegramId = userRepository.findAllByTelegramId(chatId);
             for (User existingUser : usersByTelegramId) {
                 if (existingUser.getUsername().equals(login)) {
                     sendMessage(chatId, "🚫 Ushbu foydalanuvchi allaqachon ro‘yxatdan o‘tgan!");
-                    return; // Qayta ro'yxatdan o'tishni taqiqlash
+                    return;
                 }
             }
 
             // Yangi foydalanuvchi qo'shish
             User user = new User();
             user.setUsername(login);
-            user.setPassword(password); // Parol shifrlanmagan holda saqlanadi
+            user.setPassword(password);
             user.setTelegramId(chatId);
             userRepository.save(user);
 
-            sendMessage(chatId, "✅ Muvaffaqiyatli tizimga kirdingiz!\n" + result.message);
+            sendMessage(chatId, "✅ Muvaffaqiyatli tizimga kirdingiz!\n" + result.message); // getMessage() metodiga moslashtirildi
         }
     }
 
