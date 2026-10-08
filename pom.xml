@@ -69,12 +69,12 @@
         </dependency>
 
 
-<!--        &lt;!&ndash; ✅ Telegram bot (Spring bilan integratsiyalangan rasmiy kutubxona) &ndash;&gt;-->
-<!--        <dependency>-->
-<!--            <groupId>org.telegram</groupId>-->
-<!--            <artifactId>telegrambots-spring-boot-starter</artifactId>-->
-<!--            <version>6.9.7.1</version>-->
-<!--        </dependency>-->
+        <!--        &lt;!&ndash; ✅ Telegram bot (Spring bilan integratsiyalangan rasmiy kutubxona) &ndash;&gt;-->
+        <!--        <dependency>-->
+        <!--            <groupId>org.telegram</groupId>-->
+        <!--            <artifactId>telegrambots-spring-boot-starter</artifactId>-->
+        <!--            <version>6.9.7.1</version>-->
+        <!--        </dependency>-->
 
         <!-- ✅ Jsoup (saytga login qilish uchun HTML tahlili) -->
         <dependency>

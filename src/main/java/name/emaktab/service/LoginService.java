@@ -1,13 +1,9 @@
 package name.emaktab.service;
 
-import name.emaktab.entity.User;
-import name.emaktab.payload.LoginResult;
 import org.jsoup.Connection;
 import org.jsoup.Jsoup;
-import org.jsoup.nodes.Document;
 import org.springframework.stereotype.Service;
 
-import java.io.IOException;
 import java.util.Collections;
 import java.util.Locale;
 import java.util.Map;

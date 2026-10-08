@@ -54,7 +54,6 @@ public class AutoLoginScheduler {
             List<User> users = entry.getValue();
 
             try {
-                // Faqat bir marta boshlang'ich xabar yuborish
                 StringBuilder initialMessage = new StringBuilder("🔁 Avtomatik kirish urinish boshlanmoqda:\n");
                 users.forEach(user -> initialMessage.append("- ").append(user.getUsername()).append("\n"));
                 telegramBot.sendMessage(chatId, initialMessage.toString());
